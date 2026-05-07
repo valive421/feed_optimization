@@ -18,6 +18,7 @@ final feedProvider = StateNotifierProvider<FeedController, FeedState>((ref) {
 });
 
 const int _pageSize = 10;
+const Duration _likeThrottle = Duration(milliseconds: 350);
 
 class FeedState {
   const FeedState({
@@ -81,6 +82,8 @@ class FeedController extends StateNotifier<FeedState> {
 
   final PostRepository _repository;
   final Map<String, Post> _likeRollbackCache = {};
+  final Map<String, DateTime> _lastLikeTapAt = {};
+  final Map<String, bool> _queuedLikeState = {};
 
   Future<void> loadInitial() async {
     if (state.isLoading) {
@@ -165,21 +168,45 @@ class FeedController extends StateNotifier<FeedState> {
   }
 
   Future<void> toggleLike(String postId) async {
-    if (state.pendingLikeIds.contains(postId)) {
-      return;
-    }
-
     final index = state.posts.indexWhere((post) => post.id == postId);
     if (index == -1) {
       return;
     }
 
     final current = state.posts[index];
-    final nextLiked = !current.isLiked;
-    final delta = nextLiked ? 1 : -1;
+    final desired = !current.isLiked;
+
+    final now = DateTime.now();
+    final lastTap = _lastLikeTapAt[postId];
+    _lastLikeTapAt[postId] = now;
+    if (lastTap != null && now.difference(lastTap) < _likeThrottle) {
+      _queuedLikeState[postId] = desired;
+      return;
+    }
+
+    if (state.pendingLikeIds.contains(postId)) {
+      _queuedLikeState[postId] = desired;
+      return;
+    }
+
+    await _startLikeTransition(postId, desired);
+  }
+
+  Future<void> _startLikeTransition(String postId, bool desired) async {
+    final index = state.posts.indexWhere((post) => post.id == postId);
+    if (index == -1) {
+      return;
+    }
+
+    final current = state.posts[index];
+    if (current.isLiked == desired) {
+      return;
+    }
+
+    final delta = desired ? 1 : -1;
     final nextCount = (current.likeCount + delta).clamp(0, 1 << 30);
     final optimistic = current.copyWith(
-      isLiked: nextLiked,
+      isLiked: desired,
       likeCount: nextCount,
     );
 
@@ -209,6 +236,11 @@ class FeedController extends StateNotifier<FeedState> {
         posts: rollbackPosts,
         pendingLikeIds: {...state.pendingLikeIds}..remove(postId),
       );
+    }
+
+    final queued = _queuedLikeState.remove(postId);
+    if (queued != null) {
+      await _startLikeTransition(postId, queued);
     }
   }
 }
