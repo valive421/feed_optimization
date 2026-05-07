@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/post.dart';
+import 'optimized_cached_image.dart';
 
 class PostCard extends StatelessWidget {
   const PostCard({super.key, required this.post});
@@ -73,6 +74,24 @@ class PostCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (post.mediaThumbUrl != null) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return OptimizedCachedImage(
+                                url: post.mediaThumbUrl!,
+                                width: constraints.maxWidth,
+                                height: constraints.maxHeight,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     Row(
                       children: [
                         Text(
