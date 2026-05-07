@@ -27,6 +27,7 @@ class FeedState {
     required this.isLoadingMore,
     required this.hasMore,
     required this.nextOffset,
+    required this.pendingLikeIds,
     this.errorMessage,
   });
 
@@ -36,6 +37,7 @@ class FeedState {
   final bool isLoadingMore;
   final bool hasMore;
   final int nextOffset;
+  final Set<String> pendingLikeIds;
   final String? errorMessage;
 
   FeedState copyWith({
@@ -45,6 +47,7 @@ class FeedState {
     bool? isLoadingMore,
     bool? hasMore,
     int? nextOffset,
+    Set<String>? pendingLikeIds,
     String? errorMessage,
   }) {
     return FeedState(
@@ -54,6 +57,7 @@ class FeedState {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasMore: hasMore ?? this.hasMore,
       nextOffset: nextOffset ?? this.nextOffset,
+      pendingLikeIds: pendingLikeIds ?? this.pendingLikeIds,
       errorMessage: errorMessage,
     );
   }
@@ -66,6 +70,7 @@ class FeedState {
       isLoadingMore: false,
       hasMore: true,
       nextOffset: 0,
+      pendingLikeIds: <String>{},
       errorMessage: null,
     );
   }
@@ -75,6 +80,7 @@ class FeedController extends StateNotifier<FeedState> {
   FeedController(this._repository) : super(FeedState.initial());
 
   final PostRepository _repository;
+  final Map<String, Post> _likeRollbackCache = {};
 
   Future<void> loadInitial() async {
     if (state.isLoading) {
@@ -154,6 +160,54 @@ class FeedController extends StateNotifier<FeedState> {
       state = state.copyWith(
         isLoadingMore: false,
         errorMessage: 'Failed to load more posts. $error',
+      );
+    }
+  }
+
+  Future<void> toggleLike(String postId) async {
+    if (state.pendingLikeIds.contains(postId)) {
+      return;
+    }
+
+    final index = state.posts.indexWhere((post) => post.id == postId);
+    if (index == -1) {
+      return;
+    }
+
+    final current = state.posts[index];
+    final nextLiked = !current.isLiked;
+    final delta = nextLiked ? 1 : -1;
+    final nextCount = (current.likeCount + delta).clamp(0, 1 << 30);
+    final optimistic = current.copyWith(
+      isLiked: nextLiked,
+      likeCount: nextCount,
+    );
+
+    _likeRollbackCache[postId] = current;
+    final updatedPosts = [...state.posts];
+    updatedPosts[index] = optimistic;
+
+    state = state.copyWith(
+      posts: updatedPosts,
+      pendingLikeIds: {...state.pendingLikeIds, postId},
+    );
+
+    try {
+      await _repository.toggleLike(postId: postId, userId: kUserId);
+      _likeRollbackCache.remove(postId);
+      state = state.copyWith(
+        pendingLikeIds: {...state.pendingLikeIds}..remove(postId),
+      );
+    } catch (error) {
+      final previous = _likeRollbackCache.remove(postId);
+      final rollbackPosts = [...state.posts];
+      final rollbackIndex = rollbackPosts.indexWhere((post) => post.id == postId);
+      if (previous != null && rollbackIndex != -1) {
+        rollbackPosts[rollbackIndex] = previous;
+      }
+      state = state.copyWith(
+        posts: rollbackPosts,
+        pendingLikeIds: {...state.pendingLikeIds}..remove(postId),
       );
     }
   }

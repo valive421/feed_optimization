@@ -91,7 +91,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             }
 
             final post = state.posts[index];
-            return PostCard(post: post);
+            return PostCard(
+              post: post,
+              onLike: () => ref.read(feedProvider.notifier).toggleLike(post.id),
+              isLikePending: state.pendingLikeIds.contains(post.id),
+            );
           },
         ),
       ),

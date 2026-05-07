@@ -2,6 +2,7 @@ class Post {
   const Post({
     required this.id,
     required this.likeCount,
+    required this.isLiked,
     this.mediaThumbUrl,
     this.mediaMobileUrl,
     this.mediaRawUrl,
@@ -10,6 +11,7 @@ class Post {
 
   final String id;
   final int likeCount;
+  final bool isLiked;
   final String? mediaThumbUrl;
   final String? mediaMobileUrl;
   final String? mediaRawUrl;
@@ -28,7 +30,26 @@ class Post {
         '${date.day.toString().padLeft(2, '0')}';
   }
 
-  factory Post.fromJson(Map<String, dynamic> json) {
+  Post copyWith({
+    int? likeCount,
+    bool? isLiked,
+    String? mediaThumbUrl,
+    String? mediaMobileUrl,
+    String? mediaRawUrl,
+    DateTime? createdAt,
+  }) {
+    return Post(
+      id: id,
+      likeCount: likeCount ?? this.likeCount,
+      isLiked: isLiked ?? this.isLiked,
+      mediaThumbUrl: mediaThumbUrl ?? this.mediaThumbUrl,
+      mediaMobileUrl: mediaMobileUrl ?? this.mediaMobileUrl,
+      mediaRawUrl: mediaRawUrl ?? this.mediaRawUrl,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  factory Post.fromJson(Map<String, dynamic> json, {bool isLiked = false}) {
     final likeCountRaw = json['like_count'];
     int likeCount = 0;
     if (likeCountRaw is int) {
@@ -50,6 +71,7 @@ class Post {
     return Post(
       id: json['id'].toString(),
       likeCount: likeCount,
+      isLiked: isLiked,
       mediaThumbUrl: mediaThumbUrl,
       mediaMobileUrl: mediaMobileUrl,
       mediaRawUrl: mediaRawUrl,

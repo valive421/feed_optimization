@@ -5,9 +5,16 @@ import '../screens/post_detail_screen.dart';
 import 'optimized_cached_image.dart';
 
 class PostCard extends StatelessWidget {
-  const PostCard({super.key, required this.post});
+  const PostCard({
+    super.key,
+    required this.post,
+    required this.onLike,
+    required this.isLikePending,
+  });
 
   final Post post;
+  final VoidCallback onLike;
+  final bool isLikePending;
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +152,12 @@ class PostCard extends StatelessWidget {
                               color: colorScheme.tertiary,
                               icon: Icons.calendar_today_rounded,
                             ),
+                            const Spacer(),
+                            _LikeButton(
+                              isLiked: post.isLiked,
+                              isPending: isLikePending,
+                              onPressed: onLike,
+                            ),
                           ],
                         ),
                       ],
@@ -204,6 +217,50 @@ class _InfoChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LikeButton extends StatelessWidget {
+  const _LikeButton({
+    required this.isLiked,
+    required this.isPending,
+    required this.onPressed,
+  });
+
+  final bool isLiked;
+  final bool isPending;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = isLiked ? colorScheme.primary : colorScheme.outline;
+
+    return SizedBox(
+      height: 36,
+      width: 36,
+      child: Material(
+        color: color.withValues(alpha: 0.12),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: isPending ? null : onPressed,
+          child: Center(
+            child: isPending
+                ? const SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    isLiked ? Icons.favorite : Icons.favorite_border,
+                    size: 18,
+                    color: color,
+                  ),
+          ),
+        ),
       ),
     );
   }
