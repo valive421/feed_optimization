@@ -16,6 +16,7 @@ class Post {
   final DateTime? createdAt;
 
   String get displayId => id;
+  String get shortId => id.length > 8 ? id.substring(0, 8) : id;
 
   String get displayCreatedAt {
     if (createdAt == null) {
