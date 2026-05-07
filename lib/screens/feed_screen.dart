@@ -12,12 +12,31 @@ class FeedScreen extends ConsumerStatefulWidget {
 }
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
+  late final ScrollController _scrollController;
+
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController()..addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(feedProvider.notifier).load();
+      ref.read(feedProvider.notifier).loadInitial();
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+    if (currentScroll >= maxScroll - 200) {
+      ref.read(feedProvider.notifier).loadMore();
+    }
   }
 
   @override
@@ -46,7 +65,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: () =>
-                      ref.read(feedProvider.notifier).load(force: true),
+                      ref.read(feedProvider.notifier).loadInitial(),
                   child: const Text('Retry'),
                 ),
               ],
@@ -58,12 +77,23 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('High Performance Feed')),
-      body: ListView.builder(
-        itemCount: state.posts.length,
-        itemBuilder: (context, index) {
-          final post = state.posts[index];
-          return PostCard(post: post);
-        },
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(feedProvider.notifier).refresh(),
+        child: ListView.builder(
+          controller: _scrollController,
+          itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index >= state.posts.length) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final post = state.posts[index];
+            return PostCard(post: post);
+          },
+        ),
       ),
     );
   }

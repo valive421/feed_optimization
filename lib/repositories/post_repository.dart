@@ -9,13 +9,14 @@ class PostRepository {
 
   Future<List<Post>> fetchPosts({
     required String userId,
-    int limit = 20,
+    required int from,
+    required int to,
   }) async {
     final response = await _client
         .from('posts')
         .select()
         .order('created_at', ascending: false)
-        .limit(limit);
+        .range(from, to);
 
     final data = response as List<dynamic>;
     return data
