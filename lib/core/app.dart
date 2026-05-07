@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../screens/bootstrap_screen.dart';
+import '../screens/feed_screen.dart';
 import 'app_keys.dart';
 
 class HighPerformanceFeedApp extends StatelessWidget {
@@ -15,7 +15,7 @@ class HighPerformanceFeedApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B998B)),
         useMaterial3: true,
       ),
-      home: const BootstrapScreen(),
+      home: const FeedScreen(),
     );
   }
 }
