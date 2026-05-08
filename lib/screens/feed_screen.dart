@@ -41,15 +41,18 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(feedProvider);
+    final postsLength = ref.watch(feedProvider.select((s) => s.posts.length));
+    final isLoading = ref.watch(feedProvider.select((s) => s.isLoading));
+    final isLoadingMore = ref.watch(feedProvider.select((s) => s.isLoadingMore));
+    final errorMessage = ref.watch(feedProvider.select((s) => s.errorMessage));
 
-    if (state.isLoading && state.posts.isEmpty) {
+    if (isLoading && postsLength == 0) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    if (state.errorMessage != null && state.posts.isEmpty) {
+    if (errorMessage != null && postsLength == 0) {
       return Scaffold(
         appBar: AppBar(title: const Text('High Performance Feed')),
         body: Center(
@@ -59,7 +62,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  state.errorMessage!,
+                  errorMessage,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -81,20 +84,25 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         onRefresh: () => ref.read(feedProvider.notifier).refresh(),
         child: ListView.builder(
           controller: _scrollController,
-          itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
+          cacheExtent: 600,
+          addAutomaticKeepAlives: false,
+          itemCount: postsLength + (isLoadingMore ? 1 : 0),
           itemBuilder: (context, index) {
-            if (index >= state.posts.length) {
+            if (index >= postsLength) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Center(child: CircularProgressIndicator()),
               );
             }
 
-            final post = state.posts[index];
+            // Watch only the specific post and pending flag to avoid rebuilding the whole list.
+            final post = ref.watch(feedProvider.select((s) => s.posts[index]));
+            final isPending = ref.watch(feedProvider.select((s) => s.pendingLikeIds.contains(post.id)));
+
             return PostCard(
               post: post,
               onLike: () => ref.read(feedProvider.notifier).toggleLike(post.id),
-              isLikePending: state.pendingLikeIds.contains(post.id),
+              isLikePending: isPending,
             );
           },
         ),

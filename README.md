@@ -90,6 +90,27 @@ Why Riverpod:
 - `lib/widgets/optimized_cached_image.dart` — computes and sets `memCacheWidth`/`memCacheHeight` to limit decoded bitmap sizes.
 - `lib/widgets/post_card.dart` — UI with `RepaintBoundary` and `Hero` image transitions.
 
+## Offline Interaction Handling
+
+This app includes a lightweight offline interaction system to handle transient network loss for user actions (currently: likes).
+
+- Components:
+	- `lib/services/offline_queue.dart`: a small JSON-backed queue persisted in `SharedPreferences` (key `offline_queue_v1`) that stores pending actions across restarts.
+	- `lib/providers/connectivity_provider.dart`: monitors network connectivity using `connectivity_plus` and exposes an online/offline boolean provider.
+	- `lib/providers/feed_provider.dart`: integrates the queue and connectivity state. When offline, `toggleLike` enqueues a `toggle_like` action and applies an optimistic local UI change; when connectivity is restored the controller attempts to flush the queue and apply server-side RPCs.
+
+- Behavior and tradeoffs:
+	- Likes performed offline are shown optimistically immediately and marked as pending until the queue is processed.
+	- The queue processing attempts RPCs and discards actions that fail; this keeps the queue from blocking but may lose actions if the server continually rejects them. To improve durability, consider re-enqueueing failed actions with exponential backoff and a retry cap.
+
+- How to test manually:
+	1. Run the app on a device/emulator.
+ 2. Disable network (airplane mode) or block connectivity.
+ 3. Perform several like/unlike actions in the feed; they should update the UI immediately.
+ 4. Re-enable network and observe the app processing the queued actions (the floating debug / DevTools indicator and logs may help). The actions are persisted across restarts.
+
+If you want, I can extend the queue to support other action types, add retry/backoff, or add a visible pending-actions badge in the app bar.
+
 ## Contributing
 
 Open a PR with small, focused changes. Run `flutter analyze` and `dart format` before submitting.

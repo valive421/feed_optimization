@@ -37,8 +37,8 @@ class PostCard extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: colorScheme.shadow.withValues(alpha: 0.18),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
