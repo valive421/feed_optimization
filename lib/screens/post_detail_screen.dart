@@ -37,11 +37,11 @@ class PostDetailScreen extends StatelessWidget {
                     child: CachedNetworkImage(
                       imageUrl: imageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (context, _) => Container(
+                      placeholder: (context, url) => Container(
                         height: 220,
                         color: colorScheme.surfaceContainerHighest,
                       ),
-                      errorWidget: (context, _, __) => Container(
+                      errorWidget: (context, error, stackTrace) => Container(
                         height: 220,
                         color: colorScheme.surfaceContainerHighest,
                         child: const Icon(Icons.image_not_supported_outlined),
@@ -95,7 +95,7 @@ class PostDetailScreen extends StatelessWidget {
     Navigator.of(context).push(
       PageRouteBuilder<void>(
         opaque: false,
-        pageBuilder: (_, __, ___) => FullscreenImageScreen(
+        pageBuilder: (context, animation, secondaryAnimation) => FullscreenImageScreen(
           tag: 'post-media-${post.id}',
           imageUrl: url,
         ),
@@ -160,12 +160,12 @@ class FullscreenImageScreen extends StatelessWidget {
                 child: CachedNetworkImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.contain,
-                  placeholder: (context, _) => Container(
+                  placeholder: (context, url) => Container(
                     color: colorScheme.surfaceContainerHighest,
                     height: 240,
                     width: 240,
                   ),
-                  errorWidget: (context, _, __) => Container(
+                  errorWidget: (context, error, stackTrace) => Container(
                     color: colorScheme.surfaceContainerHighest,
                     height: 240,
                     width: 240,

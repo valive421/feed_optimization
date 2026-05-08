@@ -28,10 +28,10 @@ class OptimizedCachedImage extends StatelessWidget {
       maxWidthDiskCache: cacheWidth,
       maxHeightDiskCache: cacheHeight,
       fit: fit,
-      placeholder: (context, _) => Container(
+      placeholder: (context, url) => Container(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
-      errorWidget: (context, _, __) => Container(
+      errorWidget: (context, error, stackTrace) => Container(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         child: const Icon(Icons.image_not_supported_outlined),
       ),
