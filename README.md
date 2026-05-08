@@ -2,6 +2,12 @@
 
 High Performance Feed is a Flutter application designed and implemented with performance-first principles: smooth scrolling, low memory footprint for images, optimistic UI for likes, and safe concurrency for user interactions. This README documents architecture choices, how to run and profile the app, and verification steps used to confirm the optimizations (especially `RepaintBoundary` and `memCacheWidth`).
 
+# Demo Video
+
+
+https://github.com/user-attachments/assets/6208fe1e-824a-4f9c-9ec3-96588a8127e8
+
+
 ## Quick Start
 
 Prerequisites:
@@ -71,16 +77,8 @@ Why Riverpod:
 
 ## Tests & Local Checks
 
-- Static analysis: `flutter analyze` (ensure no issues).
+- Static analysis: `flutter analyze` 
 - Formatting: `dart format .`
-
-## Repo readiness (10/10 checklist)
-
-- Clear README with setup and profiling instructions (this file).
-- `PROFILING.md` contains step-by-step profiling instructions and quick commands.
-- Linting/analyzer clean (CI should run `flutter analyze`).
-- Provide `.env.example` for required environment variables.
-- Provide a CI workflow (optional — I can add GitHub Actions to run `flutter analyze` and `dart format`).
 
 ## Notable Files
 
@@ -108,13 +106,6 @@ This app includes a lightweight offline interaction system to handle transient n
  2. Disable network (airplane mode) or block connectivity.
  3. Perform several like/unlike actions in the feed; they should update the UI immediately.
  4. Re-enable network and observe the app processing the queued actions (the floating debug / DevTools indicator and logs may help). The actions are persisted across restarts.
-
-If you want, I can extend the queue to support other action types, add retry/backoff, or add a visible pending-actions badge in the app bar.
-
-## Contributing
-
-Open a PR with small, focused changes. Run `flutter analyze` and `dart format` before submitting.
-
 ---
 
 If you'd like, I can also add:
