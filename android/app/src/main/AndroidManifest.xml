@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Allow app to use network resources -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="high_performance_feed"
         android:name="${applicationName}"
